@@ -1,0 +1,122 @@
+[
+  {
+    "id": "triage_001",
+    "name": "SSO login outage should receive high urgency",
+    "task": "triage",
+    "input": {
+      "subject": "SSO login outage",
+      "body": "All users are unable to log in after a SAML configuration update."
+    },
+    "acceptance_criteria": {
+      "required_fields": [
+        "product_area",
+        "issue_category",
+        "urgency_tier",
+        "reasoning",
+        "known_issue_match",
+        "recommended_team",
+        "draft_first_response"
+      ],
+      "allowed_urgency": ["P1", "P2"],
+      "must_include_reasoning": true,
+      "must_include_draft_response": true,
+      "known_issue_doc_path_must_be_from_retrieved_docs": true
+    },
+    "adversarial": false
+  },
+  {
+    "id": "triage_002",
+    "name": "Billing invoice issue should be triaged with a clear area",
+    "task": "triage",
+    "input": {
+      "subject": "Incorrect invoice amount",
+      "body": "We were charged twice this month and the invoice total looks wrong."
+    },
+    "acceptance_criteria": {
+      "required_fields": [
+        "product_area",
+        "issue_category",
+        "urgency_tier",
+        "reasoning",
+        "recommended_team",
+        "draft_first_response"
+      ],
+      "allowed_urgency": ["P2", "P3", "P4"],
+      "must_include_reasoning": true,
+      "must_include_draft_response": true,
+      "known_issue_doc_path_must_be_from_retrieved_docs": true
+    },
+    "adversarial": false
+  },
+  {
+    "id": "triage_003",
+    "name": "Analytics dashboard performance issue",
+    "task": "triage",
+    "input": {
+      "subject": "Dashboard is very slow",
+      "body": "Reporting dashboards take minutes to load and our reporting workflow is affected."
+    },
+    "acceptance_criteria": {
+      "required_fields": [
+        "product_area",
+        "issue_category",
+        "urgency_tier",
+        "reasoning",
+        "recommended_team",
+        "draft_first_response"
+      ],
+      "allowed_urgency": ["P2", "P3"],
+      "must_include_reasoning": true,
+      "must_include_draft_response": true,
+      "known_issue_doc_path_must_be_from_retrieved_docs": true
+    },
+    "adversarial": false
+  },
+  {
+    "id": "triage_004",
+    "name": "Documentation/how-to question should be low urgency",
+    "task": "triage",
+    "input": {
+      "subject": "How do I configure SSO?",
+      "body": "This is a general how-to question about where to configure the SSO feature in settings."
+    },
+    "acceptance_criteria": {
+      "required_fields": [
+        "product_area",
+        "issue_category",
+        "urgency_tier",
+        "reasoning",
+        "recommended_team",
+        "draft_first_response"
+      ],
+      "allowed_urgency": ["P3", "P4"],
+      "must_include_reasoning": true,
+      "must_include_draft_response": true,
+      "known_issue_doc_path_must_be_from_retrieved_docs": true
+    },
+    "adversarial": false
+  },
+  {
+    "id": "triage_005",
+    "name": "Adversarial ambiguous ticket must not crash",
+    "task": "triage",
+    "input": {
+      "text": "It is broken. Please fix ASAP."
+    },
+    "acceptance_criteria": {
+      "required_fields": [
+        "product_area",
+        "issue_category",
+        "urgency_tier",
+        "reasoning",
+        "recommended_team",
+        "draft_first_response"
+      ],
+      "allowed_urgency": ["P1", "P2", "P3", "P4"],
+      "must_include_reasoning": true,
+      "must_include_draft_response": true,
+      "known_issue_doc_path_must_be_from_retrieved_docs": true
+    },
+    "adversarial": true
+  }
+]
