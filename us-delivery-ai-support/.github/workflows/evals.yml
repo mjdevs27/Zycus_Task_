@@ -1,0 +1,46 @@
+name: Evaluation Harness
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run secret scanner
+        run: python scripts/check_secrets.py
+
+      - name: Run tests
+        run: pytest
+
+      - name: Compile check
+        run: python -m compileall app evals tests ui scripts
+
+      - name: Run eval harness
+        # Must pass even without an official dataset or a real API key:
+        # the runner generates a report with dataset_ready=false.
+        run: python -m evals.run_evals
+
+      - name: Upload eval reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-reports
+          path: |
+            eval_report.json
+            eval_report.md
+          if-no-files-found: ignore
