@@ -1,0 +1,98 @@
+[
+  {
+    "id": "account_001",
+    "name": "Account brief contains required three sections",
+    "task": "account_summary",
+    "input": {
+      "account_id": "PLACEHOLDER_ACCOUNT_ID_REPLACE_WITH_OFFICIAL"
+    },
+    "acceptance_criteria": {
+      "required_fields": [
+        "account_id",
+        "executive_summary",
+        "open_risks_and_flagged_issues",
+        "recommended_talking_points"
+      ],
+      "executive_summary_sentence_range": [3, 5],
+      "requires_direct_ticket_quote_for_each_risk": true,
+      "minimum_talking_points": 1
+    },
+    "adversarial": false,
+    "requires_official_dataset": true
+  },
+  {
+    "id": "account_002",
+    "name": "Risk flags require direct ticket quotes",
+    "task": "account_summary",
+    "input": {
+      "account_id": "PLACEHOLDER_ACCOUNT_ID_REPLACE_WITH_OFFICIAL"
+    },
+    "acceptance_criteria": {
+      "required_fields": [
+        "account_id",
+        "executive_summary",
+        "open_risks_and_flagged_issues",
+        "recommended_talking_points"
+      ],
+      "requires_direct_ticket_quote_for_each_risk": true,
+      "minimum_talking_points": 1
+    },
+    "adversarial": false,
+    "requires_official_dataset": true
+  },
+  {
+    "id": "account_003",
+    "name": "Determinism check for repeated runs",
+    "task": "account_summary",
+    "input": {
+      "account_id": "PLACEHOLDER_ACCOUNT_ID_REPLACE_WITH_OFFICIAL"
+    },
+    "acceptance_criteria": {
+      "required_fields": [
+        "account_id",
+        "executive_summary",
+        "open_risks_and_flagged_issues",
+        "recommended_talking_points"
+      ],
+      "executive_summary_sentence_range": [3, 5],
+      "minimum_talking_points": 1,
+      "determinism_check": true
+    },
+    "adversarial": false,
+    "requires_official_dataset": true
+  },
+  {
+    "id": "account_004",
+    "name": "Account with no recent tickets still produces useful talking points",
+    "task": "account_summary",
+    "input": {
+      "account_id": "PLACEHOLDER_ACCOUNT_ID_REPLACE_WITH_OFFICIAL"
+    },
+    "acceptance_criteria": {
+      "required_fields": [
+        "account_id",
+        "executive_summary",
+        "open_risks_and_flagged_issues",
+        "recommended_talking_points"
+      ],
+      "minimum_talking_points": 1,
+      "requires_direct_ticket_quote_for_each_risk": true
+    },
+    "adversarial": false,
+    "requires_official_dataset": true
+  },
+  {
+    "id": "account_005",
+    "name": "Adversarial missing or incomplete account must not hallucinate",
+    "task": "account_summary",
+    "input": {
+      "account_id": "MISSING_OR_INCOMPLETE_ACCOUNT_ID"
+    },
+    "acceptance_criteria": {
+      "expect_error_type": "AccountNotFoundError",
+      "requires_direct_ticket_quote_for_each_risk": true
+    },
+    "adversarial": true,
+    "requires_official_dataset": false
+  }
+]

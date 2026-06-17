@@ -1,0 +1,16 @@
+# Keep the graph code-only so it builds locally with no LLM API key.
+# Markdown docs (task specs, README, prompts, changelog) require semantic
+# extraction via an LLM backend, which we are not using here.
+*.md
+*.txt
+*.rst
+*.html
+*.yaml
+*.yml
+
+# Caches and build artifacts (most are auto-skipped, listed for clarity).
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.claude/
+graphify-out/
