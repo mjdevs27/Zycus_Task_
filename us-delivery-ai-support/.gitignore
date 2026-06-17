@@ -1,0 +1,41 @@
+# Environment and secrets
+# Ignore all .env variants (real secrets live here) but keep the example file.
+.env
+.env.*
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local logs/temp
+*.log
+.tmp/
+tmp/
+
+# Local Streamlit
+.streamlit/secrets.toml
