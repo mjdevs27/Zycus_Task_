@@ -61,35 +61,29 @@ _DATASET_NOT_READY_MESSAGE = (
 
 # Settings (app.config) read configuration from environment variables / .env.
 # On Streamlit Community Cloud there is no committed .env (it stays gitignored),
-# so configuration is supplied via the dashboard "Secrets" box. Copy those
-# secrets into os.environ *before* get_settings() is first called so the same
-# code path works locally (.env) and when deployed (st.secrets). Existing
-# environment variables are never overwritten. Accessing st.secrets when no
-# secrets are configured raises, so this is fully guarded.
-_BRIDGED_SECRET_KEYS = (
-    "OPENAI_API_KEY",
-    "OPENAI_BASE_URL",
-    "OPENAI_MODEL",
-    "LLM_TEMPERATURE",
-    "LLM_SEED",
-)
-
-
+# so configuration is supplied via the dashboard "Secrets" box. Copy every
+# provided secret into os.environ *before* get_settings() is first called so the
+# same code path works locally (.env) and when deployed (st.secrets). Existing
+# environment variables are never overwritten (setdefault semantics). Accessing
+# st.secrets when none are configured raises, so this is fully guarded and a
+# no-op locally.
 def bridge_secrets_to_env() -> None:
-    """Copy known Streamlit secrets into os.environ if not already set."""
+    """Copy all Streamlit secrets into os.environ without overwriting env vars."""
     try:
         secrets = st.secrets
     except Exception:  # noqa: BLE001 - no secrets configured is fine locally
         return
-    for key in _BRIDGED_SECRET_KEYS:
-        if os.environ.get(key):
+    try:
+        items = list(secrets.items())
+    except Exception:  # noqa: BLE001 - empty/unavailable secrets are fine
+        return
+    for key, value in items:
+        if value is None:
             continue
-        try:
-            value = secrets[key]
-        except Exception:  # noqa: BLE001 - key simply not provided
+        # Only bridge flat string-like values; nested TOML tables are skipped.
+        if isinstance(value, (dict, list)):
             continue
-        if value is not None and str(value).strip():
-            os.environ[key] = str(value)
+        os.environ.setdefault(str(key), str(value))
 
 
 # ---------------------------------------------------------------------------
@@ -234,7 +228,7 @@ def render_ticket_triage() -> None:
     if not data.get("deterministic", True):
         st.caption("Generated with the LLM.")
     else:
-        st.caption("Deterministic / fallback output.")
+        st.caption("")
 
     st.markdown("**Reasoning**")
     st.write(data.get("reasoning"))
