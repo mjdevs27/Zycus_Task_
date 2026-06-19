@@ -19,12 +19,20 @@ import sys
 from pathlib import Path
 from typing import Any
 
-# Ensure the repository root (the parent of this ui/ directory) is importable
+# Ensure the project root (the parent of this ui/ directory) is importable
 # so ``import app...`` works no matter where the script is launched from. This
 # matters on Streamlit Community Cloud, where the entry script lives in ui/.
-_REPO_ROOT = str(Path(__file__).resolve().parent.parent)
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+# Load the local .env (if present) before importing any app module that reads
+# settings. ``override=False`` keeps real environment variables / Streamlit
+# secrets authoritative. On Streamlit Cloud there is no .env and this is a
+# harmless no-op; configuration comes from the secrets bridge instead.
+from dotenv import load_dotenv  # noqa: E402
+
+load_dotenv(_PROJECT_ROOT / ".env", override=False)
 
 import streamlit as st
 
@@ -105,8 +113,15 @@ def safe_model_dump(obj: Any) -> dict:
 
 def _provider_label(settings) -> str:
     """Describe the configured provider without revealing any secret."""
-    base_url = settings.openai_base_url or "OpenAI default endpoint"
-    return f"{base_url} · model `{settings.openai_model}`"
+    base_url = settings.openai_base_url
+    if base_url:
+        if "groq" in base_url.lower():
+            provider = "Groq OpenAI-compatible endpoint"
+        else:
+            provider = "OpenAI-compatible endpoint"
+    else:
+        provider = "OpenAI default endpoint"
+    return f"{provider} · model `{settings.openai_model}`"
 
 
 # ---------------------------------------------------------------------------
@@ -214,8 +229,13 @@ def render_ticket_triage() -> None:
     except MissingLLMConfigurationError:
         st.warning("LLM is not configured; showing the deterministic local fallback.")
         return
-    except Exception:  # noqa: BLE001 - never show a stack trace
+    except Exception as exc:  # noqa: BLE001 - never show a stack trace in prod
         st.error("An unexpected error occurred while triaging the ticket.")
+        # Surface the underlying error only in development to aid debugging;
+        # production submissions never expose a stack trace.
+        if get_settings().app_env == "development":
+            with st.expander("Debug details (development only)"):
+                st.exception(exc)
         return
 
     data = safe_model_dump(result)

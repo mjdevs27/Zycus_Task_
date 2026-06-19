@@ -91,7 +91,10 @@ class TicketTriageAgent:
                     "Return JSON only."
                 ),
             )
-        except LLMClientError as exc:
+        except (LLMClientError, PromptError) as exc:
+            # No LLM key, transport failure, or an unavailable/invalid prompt
+            # template must all degrade to the deterministic local fallback
+            # rather than crash the request.
             return self._fallback_response(redacted_text, docs, exc)
 
         try:
