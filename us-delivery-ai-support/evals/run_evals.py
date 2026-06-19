@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from app.account_summarizer import AccountHealthSummarizer
+from app.config import get_settings
 from app.data_loader import check_dataset_status
 from app.schemas import EvalCaseResult, EvalReport, TicketTriageRequest
 from app.triage_agent import TicketTriageAgent
@@ -26,10 +27,15 @@ from evals.scoring import score_case
 
 logger = logging.getLogger("evals.run_evals")
 
-DEFAULT_TRIAGE_PATH = "evals/test_cases/triage_tests.json"
-DEFAULT_ACCOUNT_PATH = "evals/test_cases/account_summary_tests.json"
-DEFAULT_JSON_REPORT = "eval_report.json"
-DEFAULT_MD_REPORT = "eval_report.md"
+# Anchor case files to this package directory and reports to the configured
+# (project-root absolute) paths so the runner works from any working directory
+# (CLI from the project root, or the Streamlit UI launched from the repo root).
+_EVALS_DIR = Path(__file__).resolve().parent
+
+DEFAULT_TRIAGE_PATH = _EVALS_DIR / "test_cases" / "triage_tests.json"
+DEFAULT_ACCOUNT_PATH = _EVALS_DIR / "test_cases" / "account_summary_tests.json"
+DEFAULT_JSON_REPORT = get_settings().eval_report_json
+DEFAULT_MD_REPORT = get_settings().eval_report_md
 
 
 class EvalRunnerError(Exception):

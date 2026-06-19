@@ -194,3 +194,36 @@ def test_run_all_evals_writes_reports(tmp_path: Path, monkeypatch):
     assert json_out.exists()
     assert md_out.exists()
     assert report.total_cases == 2
+
+
+# Test 8 — default case/report paths are absolute (CWD-independent)
+def test_default_paths_are_absolute_and_exist():
+    import evals.run_evals as run_evals
+
+    assert run_evals.DEFAULT_TRIAGE_PATH.is_absolute()
+    assert run_evals.DEFAULT_TRIAGE_PATH.exists()
+    assert run_evals.DEFAULT_ACCOUNT_PATH.is_absolute()
+    assert run_evals.DEFAULT_ACCOUNT_PATH.exists()
+    assert Path(run_evals.DEFAULT_JSON_REPORT).is_absolute()
+    assert Path(run_evals.DEFAULT_MD_REPORT).is_absolute()
+
+
+# Test 9 — run_all_evals works when launched from an unrelated CWD (the bug the
+# Streamlit "Run evals" button hit: it launches from the repository root).
+def test_run_all_evals_works_from_unrelated_cwd(tmp_path: Path, monkeypatch):
+    import evals.run_evals as run_evals
+
+    monkeypatch.setattr(run_evals, "TicketTriageAgent", lambda *a, **k: _FakeTriageAgent())
+    monkeypatch.setattr(
+        run_evals, "AccountHealthSummarizer", lambda *a, **k: _FakeSummarizer()
+    )
+    monkeypatch.chdir(tmp_path)
+
+    json_out = tmp_path / "out.json"
+    md_out = tmp_path / "out.md"
+    # No case paths passed -> must resolve the absolute default case files even
+    # though the working directory is unrelated to the project.
+    report = run_all_evals(output_json_path=json_out, output_md_path=md_out)
+    assert json_out.exists()
+    assert md_out.exists()
+    assert report.total_cases >= 10

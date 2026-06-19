@@ -78,7 +78,6 @@ from app.streaming import stream_account_brief_sections  # noqa: E402
 from app.triage_agent import TicketTriageAgent  # noqa: E402
 
 PROJECT_NAME = "US Delivery AI Support Tools"
-EVAL_REPORT_JSON = "eval_report.json"
 
 _DATASET_NOT_READY_MESSAGE = (
     "Official dataset is not ready. Place the starter repo `tickets.json`, "
@@ -392,10 +391,15 @@ def render_eval_report() -> None:
             with st.spinner("Running evaluation harness..."):
                 run_all_evals()
             st.success("Evaluation complete.")
-        except Exception:  # noqa: BLE001 - never show a stack trace
+        except Exception as exc:  # noqa: BLE001 - never show a raw trace in prod
             st.error("An unexpected error occurred while running evaluations.")
+            if get_settings().app_env == "development":
+                with st.expander("Debug details (development only)"):
+                    st.exception(exc)
 
-    report_path = Path(EVAL_REPORT_JSON)
+    # Read the report from the configured (project-root absolute) path so the
+    # UI finds it regardless of the working directory it was launched from.
+    report_path = Path(get_settings().eval_report_json)
     if not report_path.exists():
         st.info(
             "No eval report found yet. Click **Run evals** to generate "
