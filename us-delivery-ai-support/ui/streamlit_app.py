@@ -434,6 +434,8 @@ def render_eval_report() -> None:
 
         results = data.get("results") or []
         if results:
+            import pandas as pd
+
             rows = [
                 {
                     "ID": r.get("id"),
@@ -446,12 +448,19 @@ def render_eval_report() -> None:
                 }
                 for r in results
             ]
-            st.dataframe(rows, width="stretch")
-            triage_n = sum(1 for r in rows if r["Task"] == "triage")
-            account_n = sum(1 for r in rows if r["Task"] == "account_summary")
-            st.caption(
-                f"{len(rows)} eval cases "
-                f"({triage_n} triage, {account_n} account_summary)."
+            df = pd.DataFrame(rows, columns=[
+                "ID", "Task", "Name", "Passed", "Score", "Adversarial", "Notes",
+            ])
+
+            st.subheader(f"Results ({len(df)} cases)")
+            # Static table: always renders every row, no interactive/Arrow quirks.
+            st.table(df)
+
+            st.download_button(
+                "Download CSV",
+                data=df.to_csv(index=False),
+                file_name="eval_report.csv",
+                mime="text/csv",
             )
         else:
             st.info("The report contains no result rows.")
