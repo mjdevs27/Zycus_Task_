@@ -434,7 +434,27 @@ def render_eval_report() -> None:
 
         results = data.get("results") or []
         if results:
-            st.dataframe(results, use_container_width=True)
+            rows = [
+                {
+                    "ID": r.get("id"),
+                    "Task": r.get("task"),
+                    "Name": r.get("name"),
+                    "Passed": bool(r.get("passed")),
+                    "Score": r.get("score"),
+                    "Adversarial": bool(r.get("adversarial")),
+                    "Notes": "; ".join(r.get("notes") or []),
+                }
+                for r in results
+            ]
+            st.dataframe(rows, width="stretch")
+            triage_n = sum(1 for r in rows if r["Task"] == "triage")
+            account_n = sum(1 for r in rows if r["Task"] == "account_summary")
+            st.caption(
+                f"{len(rows)} eval cases "
+                f"({triage_n} triage, {account_n} account_summary)."
+            )
+        else:
+            st.info("The report contains no result rows.")
 
 
 # ---------------------------------------------------------------------------
