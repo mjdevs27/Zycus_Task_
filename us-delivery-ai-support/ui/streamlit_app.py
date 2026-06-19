@@ -380,90 +380,80 @@ def render_account_brief() -> None:
 def render_eval_report() -> None:
     st.header("Task 3 — Evaluation Report")
 
-    cols = st.columns(2)
-    run_clicked = cols[0].button("Run evals")
-    refresh_clicked = cols[1].button("Load/refresh existing report")
+    run_clicked = st.button("Run evals")
 
+    # Only run + display when the button is clicked. Nothing is shown before
+    # the first click in this session.
     if run_clicked:
         try:
             from evals.run_evals import run_all_evals
 
             with st.spinner("Running evaluation harness..."):
                 run_all_evals()
-            st.success("Evaluation complete.")
-        except Exception as exc:  # noqa: BLE001 - never show a raw trace in prod
-            st.error("An unexpected error occurred while running evaluations.")
+            st.session_state["eval_data"] = _load_eval_report()
+        except Exception as exc:  # noqa: BLE001 - no error banner in the UI
+            # Keep the UI clean; only surface details in development.
             if get_settings().app_env == "development":
                 with st.expander("Debug details (development only)"):
                     st.exception(exc)
 
-    # Read the report from the configured (project-root absolute) path so the
-    # UI finds it regardless of the working directory it was launched from.
-    report_path = Path(get_settings().eval_report_json)
-    if not report_path.exists():
-        st.info(
-            "No eval report found yet. Click **Run evals** to generate "
-            "`eval_report.json` and `eval_report.md`."
-        )
+    data = st.session_state.get("eval_data")
+    if not data:
         return
 
-    if refresh_clicked or run_clicked or report_path.exists():
-        try:
-            data = json.loads(report_path.read_text(encoding="utf-8"))
-        except Exception:  # noqa: BLE001
-            st.error("Could not read the existing eval report.")
-            return
+    total = data.get("total_cases") or 0
+    passed = data.get("passed_cases") or 0
+    pass_rate = f"{(passed / total * 100):.0f}%" if total else "—"
 
-        total = data.get("total_cases") or 0
-        passed = data.get("passed_cases") or 0
-        pass_rate = f"{(passed / total * 100):.0f}%" if total else "—"
+    cols = st.columns(6)
+    cols[0].metric("Total", total)
+    cols[1].metric("Passed", passed)
+    cols[2].metric("Failed", data.get("failed_cases"))
+    cols[3].metric("Pass rate", pass_rate)
+    cols[4].metric("Avg score", data.get("average_score"))
+    cols[5].metric("Dataset ready", str(data.get("dataset_ready")))
 
-        cols = st.columns(6)
-        cols[0].metric("Total", total)
-        cols[1].metric("Passed", passed)
-        cols[2].metric("Failed", data.get("failed_cases"))
-        cols[3].metric("Pass rate", pass_rate)
-        cols[4].metric("Avg score", data.get("average_score"))
-        cols[5].metric("Dataset ready", str(data.get("dataset_ready")))
+    results = data.get("results") or []
+    if results:
+        import pandas as pd
 
-        if not data.get("dataset_ready"):
-            st.warning(
-                "Dataset is not ready, so account cases requiring official data "
-                "failed gracefully. This is expected and shown honestly."
-            )
+        rows = [
+            {
+                "ID": r.get("id"),
+                "Task": r.get("task"),
+                "Name": r.get("name"),
+                "Passed": bool(r.get("passed")),
+                "Score": r.get("score"),
+                "Adversarial": bool(r.get("adversarial")),
+                "Notes": "; ".join(r.get("notes") or []),
+            }
+            for r in results
+        ]
+        df = pd.DataFrame(rows, columns=[
+            "ID", "Task", "Name", "Passed", "Score", "Adversarial", "Notes",
+        ])
 
-        results = data.get("results") or []
-        if results:
-            import pandas as pd
+        st.subheader(f"Results ({len(df)} cases)")
+        # Static table: always renders every row, no interactive/Arrow quirks.
+        st.table(df)
 
-            rows = [
-                {
-                    "ID": r.get("id"),
-                    "Task": r.get("task"),
-                    "Name": r.get("name"),
-                    "Passed": bool(r.get("passed")),
-                    "Score": r.get("score"),
-                    "Adversarial": bool(r.get("adversarial")),
-                    "Notes": "; ".join(r.get("notes") or []),
-                }
-                for r in results
-            ]
-            df = pd.DataFrame(rows, columns=[
-                "ID", "Task", "Name", "Passed", "Score", "Adversarial", "Notes",
-            ])
+        st.download_button(
+            "Download CSV",
+            data=df.to_csv(index=False),
+            file_name="eval_report.csv",
+            mime="text/csv",
+        )
 
-            st.subheader(f"Results ({len(df)} cases)")
-            # Static table: always renders every row, no interactive/Arrow quirks.
-            st.table(df)
 
-            st.download_button(
-                "Download CSV",
-                data=df.to_csv(index=False),
-                file_name="eval_report.csv",
-                mime="text/csv",
-            )
-        else:
-            st.info("The report contains no result rows.")
+def _load_eval_report() -> dict | None:
+    """Read the generated eval report JSON from the configured absolute path."""
+    report_path = Path(get_settings().eval_report_json)
+    if not report_path.exists():
+        return None
+    try:
+        return json.loads(report_path.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001 - a malformed report should not crash the UI
+        return None
 
 
 # ---------------------------------------------------------------------------
