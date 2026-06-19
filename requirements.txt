@@ -1,0 +1,19 @@
+# Repository-root requirements for Streamlit Community Cloud.
+#
+# The deployable app lives in us-delivery-ai-support/ (entry file
+# us-delivery-ai-support/ui/streamlit_app.py). Streamlit Cloud installs
+# dependencies from the repository root, so this mirrors
+# us-delivery-ai-support/requirements.txt to guarantee they are found.
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+python-dotenv
+openai
+numpy
+scikit-learn
+streamlit
+pytest
+ruff
+black
+httpx
