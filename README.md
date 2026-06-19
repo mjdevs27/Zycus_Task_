@@ -13,7 +13,7 @@ The implementation is designed to be **safe, deterministic where required, datas
 
 ## 🎬 Walkthrough Video
 
-▶️ **Click here to watch the walkthrough:** `REPLACE_WITH_LOOM_VIDEO_LINK`
+▶️ **Click here to watch the walkthrough:** `https://www.loom.com/share/7c03ac8fb67f459680dba14209f99a10`
 
 > Replace this placeholder with your Loom video link after recording. The assessment requires a 3–6 minute walkthrough covering code, live demo of Task 1 and Task 2, and eval results.
 
