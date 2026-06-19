@@ -1,0 +1,110 @@
+{
+  "generated_at": "2026-06-19T03:06:49.603061+00:00",
+  "total_cases": 10,
+  "passed_cases": 5,
+  "failed_cases": 5,
+  "average_score": 0.5,
+  "results": [
+    {
+      "id": "triage_001",
+      "name": "SSO login outage should receive high urgency",
+      "task": "triage",
+      "passed": true,
+      "score": 1.0,
+      "notes": [],
+      "adversarial": false
+    },
+    {
+      "id": "triage_002",
+      "name": "Billing invoice issue should be triaged with a clear area",
+      "task": "triage",
+      "passed": true,
+      "score": 1.0,
+      "notes": [],
+      "adversarial": false
+    },
+    {
+      "id": "triage_003",
+      "name": "Analytics dashboard performance issue",
+      "task": "triage",
+      "passed": true,
+      "score": 1.0,
+      "notes": [],
+      "adversarial": false
+    },
+    {
+      "id": "triage_004",
+      "name": "Documentation/how-to question should be low urgency",
+      "task": "triage",
+      "passed": true,
+      "score": 1.0,
+      "notes": [],
+      "adversarial": false
+    },
+    {
+      "id": "triage_005",
+      "name": "Adversarial ambiguous ticket must not crash",
+      "task": "triage",
+      "passed": true,
+      "score": 1.0,
+      "notes": [],
+      "adversarial": true
+    },
+    {
+      "id": "account_001",
+      "name": "Account brief contains required three sections",
+      "task": "account_summary",
+      "passed": false,
+      "score": 0.0,
+      "notes": [
+        "Official dataset is not ready, so this account-summary case could not be executed without inventing account data."
+      ],
+      "adversarial": false
+    },
+    {
+      "id": "account_002",
+      "name": "Risk flags require direct ticket quotes",
+      "task": "account_summary",
+      "passed": false,
+      "score": 0.0,
+      "notes": [
+        "Official dataset is not ready, so this account-summary case could not be executed without inventing account data."
+      ],
+      "adversarial": false
+    },
+    {
+      "id": "account_003",
+      "name": "Determinism check for repeated runs",
+      "task": "account_summary",
+      "passed": false,
+      "score": 0.0,
+      "notes": [
+        "Official dataset is not ready, so this account-summary case could not be executed without inventing account data."
+      ],
+      "adversarial": false
+    },
+    {
+      "id": "account_004",
+      "name": "Account with no recent tickets still produces useful talking points",
+      "task": "account_summary",
+      "passed": false,
+      "score": 0.0,
+      "notes": [
+        "Official dataset is not ready, so this account-summary case could not be executed without inventing account data."
+      ],
+      "adversarial": false
+    },
+    {
+      "id": "account_005",
+      "name": "Adversarial missing or incomplete account must not hallucinate",
+      "task": "account_summary",
+      "passed": false,
+      "score": 0.0,
+      "notes": [
+        "Account case error: EmptyDatasetError: accounts dataset contains zero records."
+      ],
+      "adversarial": true
+    }
+  ],
+  "dataset_ready": false
+}
