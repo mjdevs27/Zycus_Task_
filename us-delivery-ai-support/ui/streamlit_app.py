@@ -414,12 +414,17 @@ def render_eval_report() -> None:
             st.error("Could not read the existing eval report.")
             return
 
-        cols = st.columns(5)
-        cols[0].metric("Total", data.get("total_cases"))
-        cols[1].metric("Passed", data.get("passed_cases"))
+        total = data.get("total_cases") or 0
+        passed = data.get("passed_cases") or 0
+        pass_rate = f"{(passed / total * 100):.0f}%" if total else "—"
+
+        cols = st.columns(6)
+        cols[0].metric("Total", total)
+        cols[1].metric("Passed", passed)
         cols[2].metric("Failed", data.get("failed_cases"))
-        cols[3].metric("Avg score", data.get("average_score"))
-        cols[4].metric("Dataset ready", str(data.get("dataset_ready")))
+        cols[3].metric("Pass rate", pass_rate)
+        cols[4].metric("Avg score", data.get("average_score"))
+        cols[5].metric("Dataset ready", str(data.get("dataset_ready")))
 
         if not data.get("dataset_ready"):
             st.warning(
