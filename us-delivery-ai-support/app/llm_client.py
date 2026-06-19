@@ -182,7 +182,13 @@ class LLMClient:
         return validate_model_response_text(content)
 
     def complete_json(self, prompt: str, *, system_message: str | None = None) -> dict:
-        """Return a parsed JSON object. Raises on missing config or bad JSON."""
+        """Return a parsed JSON object. Raises on missing config or bad JSON.
+
+        Tries native JSON mode (``response_format={"type": "json_object"}``)
+        first. Some OpenAI-compatible providers/models reject that parameter, so
+        on a request failure we retry once without it and rely on robust parsing
+        (fence stripping + object extraction) instead of crashing.
+        """
         self._require_config()
         messages = self._build_messages(prompt, system_message)
         try:
@@ -190,11 +196,19 @@ class LLMClient:
             content = response.choices[0].message.content
         except LLMClientError:
             raise
-        except Exception as exc:  # noqa: BLE001 - wrap SDK/transport errors cleanly
-            logger.error("LLM JSON completion failed: %s", type(exc).__name__)
-            raise LLMResponseError(
-                f"LLM request failed: {type(exc).__name__}"
-            ) from exc
+        except Exception as exc:  # noqa: BLE001 - retry without JSON mode
+            logger.info(
+                "JSON-mode completion failed (%s); retrying without response_format",
+                type(exc).__name__,
+            )
+            try:
+                response = self._create_completion(messages, json_mode=False)
+                content = response.choices[0].message.content
+            except Exception as exc2:  # noqa: BLE001 - wrap SDK/transport errors
+                logger.error("LLM JSON completion failed: %s", type(exc2).__name__)
+                raise LLMResponseError(
+                    f"LLM request failed: {type(exc2).__name__}"
+                ) from exc2
 
         text = validate_model_response_text(content)
         return self.parse_json_response(text)

@@ -30,29 +30,52 @@ if str(_PROJECT_ROOT) not in sys.path:
 # settings. ``override=False`` keeps real environment variables / Streamlit
 # secrets authoritative. On Streamlit Cloud there is no .env and this is a
 # harmless no-op; configuration comes from the secrets bridge instead.
+import streamlit as st  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
 
+# ---------------------------------------------------------------------------
+# Configuration bootstrap — MUST run before importing any app.* module.
+# ---------------------------------------------------------------------------
+#
+# app.config builds Settings from environment variables / .env. If Settings is
+# constructed before the configuration source is in os.environ, it falls back
+# to defaults (gpt-4o-mini, no key). So we populate the environment here, at the
+# very top of the file, before the first app import:
+#
+#   1. Local development -> load the project-root .env (does not override real
+#      environment variables that are already set).
+#   2. Streamlit Community Cloud -> there is no .env; configuration is provided
+#      via the dashboard "Secrets" box. Copy those secrets into os.environ.
+#      Secrets are authoritative on the cloud, so they overwrite here.
+#
+# The API key is never printed.
 load_dotenv(_PROJECT_ROOT / ".env", override=False)
 
-import streamlit as st
+try:
+    for _key, _value in st.secrets.items():
+        if _value is None or isinstance(_value, (dict, list)):
+            continue
+        os.environ[str(_key)] = str(_value)
+except Exception:  # noqa: BLE001 - no secrets configured (e.g. local run) is fine
+    pass
 
-from app.account_summarizer import (
+from app.account_summarizer import (  # noqa: E402
     AccountDataError,
     AccountHealthSummarizer,
     AccountNotFoundError,
     AccountSummaryError,
 )
-from app.config import get_settings
-from app.data_loader import (
+from app.config import get_settings  # noqa: E402
+from app.data_loader import (  # noqa: E402
     EmptyDatasetError,
     InvalidDatasetError,
     MissingDatasetError,
     check_dataset_status,
 )
-from app.llm_client import MissingLLMConfigurationError
-from app.schemas import TicketTriageRequest
-from app.streaming import stream_account_brief_sections
-from app.triage_agent import TicketTriageAgent
+from app.llm_client import MissingLLMConfigurationError  # noqa: E402
+from app.schemas import TicketTriageRequest  # noqa: E402
+from app.streaming import stream_account_brief_sections  # noqa: E402
+from app.triage_agent import TicketTriageAgent  # noqa: E402
 
 PROJECT_NAME = "US Delivery AI Support Tools"
 EVAL_REPORT_JSON = "eval_report.json"
@@ -61,37 +84,6 @@ _DATASET_NOT_READY_MESSAGE = (
     "Official dataset is not ready. Place the starter repo `tickets.json`, "
     "`accounts.json`, and Markdown KB docs in the configured paths."
 )
-
-
-# ---------------------------------------------------------------------------
-# Deployment: bridge Streamlit Cloud secrets into the environment
-# ---------------------------------------------------------------------------
-
-# Settings (app.config) read configuration from environment variables / .env.
-# On Streamlit Community Cloud there is no committed .env (it stays gitignored),
-# so configuration is supplied via the dashboard "Secrets" box. Copy every
-# provided secret into os.environ *before* get_settings() is first called so the
-# same code path works locally (.env) and when deployed (st.secrets). Existing
-# environment variables are never overwritten (setdefault semantics). Accessing
-# st.secrets when none are configured raises, so this is fully guarded and a
-# no-op locally.
-def bridge_secrets_to_env() -> None:
-    """Copy all Streamlit secrets into os.environ without overwriting env vars."""
-    try:
-        secrets = st.secrets
-    except Exception:  # noqa: BLE001 - no secrets configured is fine locally
-        return
-    try:
-        items = list(secrets.items())
-    except Exception:  # noqa: BLE001 - empty/unavailable secrets are fine
-        return
-    for key, value in items:
-        if value is None:
-            continue
-        # Only bridge flat string-like values; nested TOML tables are skipped.
-        if isinstance(value, (dict, list)):
-            continue
-        os.environ.setdefault(str(key), str(value))
 
 
 # ---------------------------------------------------------------------------
@@ -140,6 +132,13 @@ def render_sidebar() -> str:
     # Never show the key itself — only whether one is present.
     key_state = "configured" if settings.openai_api_key else "not configured"
     st.sidebar.write(f"LLM API key: {key_state}")
+
+    # Safe diagnostics: booleans and non-secret values only, never the key.
+    with st.sidebar.expander("Config debug", expanded=False):
+        st.write("OPENAI_API_KEY loaded:", bool(settings.openai_api_key))
+        st.write("OPENAI_BASE_URL loaded:", bool(settings.openai_base_url))
+        st.write("OPENAI_MODEL:", settings.openai_model)
+        st.write("APP_ENV:", settings.app_env)
 
     try:
         status = check_dataset_status(settings)
@@ -457,7 +456,6 @@ items (this UI, streaming, CI, prompt versioning).
 
 def main() -> None:
     st.set_page_config(page_title=PROJECT_NAME, page_icon="🎫", layout="wide")
-    bridge_secrets_to_env()
     section = render_sidebar()
     if section == "Dataset Status":
         render_dataset_status()
