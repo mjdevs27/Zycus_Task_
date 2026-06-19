@@ -39,6 +39,19 @@ def test_redact_phone_international():
     assert "98765 43210" not in out
 
 
+def test_redact_phone_followed_by_sentence_period():
+    # A phone number ending a sentence must still be redacted; the trailing
+    # period is sentence punctuation, not a version/decimal separator.
+    out = redact_pii("Please call me at 9876543210. Users cannot access it.")
+    assert "[REDACTED_PHONE]" in out
+    assert "9876543210" not in out
+
+
+def test_redact_long_numeric_id_followed_by_period():
+    out = redact_pii("Reference 1234567890123. End.")
+    assert "1234567890123" not in out
+
+
 def test_redact_secrets():
     text = "api_key=abc123 token=secretvalue Bearer ey123abc"
     out = redact_pii(text)

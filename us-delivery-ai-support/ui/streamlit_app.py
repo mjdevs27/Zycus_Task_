@@ -14,8 +14,17 @@ Safety:
 from __future__ import annotations
 
 import json
+import os
+import sys
 from pathlib import Path
 from typing import Any
+
+# Ensure the repository root (the parent of this ui/ directory) is importable
+# so ``import app...`` works no matter where the script is launched from. This
+# matters on Streamlit Community Cloud, where the entry script lives in ui/.
+_REPO_ROOT = str(Path(__file__).resolve().parent.parent)
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
 import streamlit as st
 
@@ -44,6 +53,43 @@ _DATASET_NOT_READY_MESSAGE = (
     "Official dataset is not ready. Place the starter repo `tickets.json`, "
     "`accounts.json`, and Markdown KB docs in the configured paths."
 )
+
+
+# ---------------------------------------------------------------------------
+# Deployment: bridge Streamlit Cloud secrets into the environment
+# ---------------------------------------------------------------------------
+
+# Settings (app.config) read configuration from environment variables / .env.
+# On Streamlit Community Cloud there is no committed .env (it stays gitignored),
+# so configuration is supplied via the dashboard "Secrets" box. Copy those
+# secrets into os.environ *before* get_settings() is first called so the same
+# code path works locally (.env) and when deployed (st.secrets). Existing
+# environment variables are never overwritten. Accessing st.secrets when no
+# secrets are configured raises, so this is fully guarded.
+_BRIDGED_SECRET_KEYS = (
+    "OPENAI_API_KEY",
+    "OPENAI_BASE_URL",
+    "OPENAI_MODEL",
+    "LLM_TEMPERATURE",
+    "LLM_SEED",
+)
+
+
+def bridge_secrets_to_env() -> None:
+    """Copy known Streamlit secrets into os.environ if not already set."""
+    try:
+        secrets = st.secrets
+    except Exception:  # noqa: BLE001 - no secrets configured is fine locally
+        return
+    for key in _BRIDGED_SECRET_KEYS:
+        if os.environ.get(key):
+            continue
+        try:
+            value = secrets[key]
+        except Exception:  # noqa: BLE001 - key simply not provided
+            continue
+        if value is not None and str(value).strip():
+            os.environ[key] = str(value)
 
 
 # ---------------------------------------------------------------------------
@@ -397,6 +443,7 @@ items (this UI, streaming, CI, prompt versioning).
 
 def main() -> None:
     st.set_page_config(page_title=PROJECT_NAME, page_icon="🎫", layout="wide")
+    bridge_secrets_to_env()
     section = render_sidebar()
     if section == "Dataset Status":
         render_dataset_status()

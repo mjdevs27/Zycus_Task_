@@ -51,12 +51,15 @@ _URL_QUERY_RE = re.compile(r"(https?://[^\s?]+)\?(\S+)")
 
 # Phone-like runs: optional leading +, then 10-15 digits separated only by
 # single spaces, dots, hyphens or parentheses. Requires >= 10 digits so short
-# numbers (404, 500, P1, 1.2.3) are never matched.
-_PHONE_RE = re.compile(r"(?<![\w@.+])\(?\+?(?:\d[\s.\-()]{0,2}){9,14}\d(?![\w@.])")
+# numbers (404, 500, P1, 1.2.3) are never matched. A trailing period is allowed
+# (sentence punctuation) but a period followed by a digit is rejected so dotted
+# versions / decimals are preserved.
+_PHONE_RE = re.compile(r"(?<![\w@.+])\(?\+?(?:\d[\s.\-()]{0,2}){9,14}\d(?![\w@]|\.\d)")
 
 # Long standalone numeric identifiers: 8+ contiguous digits, not part of a
-# dotted version or alphanumeric token.
-_LONG_NUMERIC_RE = re.compile(r"(?<![\w.])\d{8,}(?![\w.])")
+# dotted version or alphanumeric token. A trailing sentence period is allowed,
+# but a period followed by a digit (version/decimal) is not.
+_LONG_NUMERIC_RE = re.compile(r"(?<![\w.])\d{8,}(?![\w]|\.\d)")
 
 
 # Single-target redactors ----------------------------------------------------
