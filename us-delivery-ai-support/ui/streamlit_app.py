@@ -389,8 +389,10 @@ def render_eval_report() -> None:
             from evals.run_evals import run_all_evals
 
             with st.spinner("Running evaluation harness..."):
-                run_all_evals()
-            st.session_state["eval_data"] = _load_eval_report()
+                report = run_all_evals()
+            # Use the returned report object directly so display never depends
+            # on reading the file back from disk.
+            st.session_state["eval_data"] = report.model_dump()
         except Exception as exc:  # noqa: BLE001 - no error banner in the UI
             # Keep the UI clean; only surface details in development.
             if get_settings().app_env == "development":
@@ -443,17 +445,6 @@ def render_eval_report() -> None:
             file_name="eval_report.csv",
             mime="text/csv",
         )
-
-
-def _load_eval_report() -> dict | None:
-    """Read the generated eval report JSON from the configured absolute path."""
-    report_path = Path(get_settings().eval_report_json)
-    if not report_path.exists():
-        return None
-    try:
-        return json.loads(report_path.read_text(encoding="utf-8"))
-    except Exception:  # noqa: BLE001 - a malformed report should not crash the UI
-        return None
 
 
 # ---------------------------------------------------------------------------
